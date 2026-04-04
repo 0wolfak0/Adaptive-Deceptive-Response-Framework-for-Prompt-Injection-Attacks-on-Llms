@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>LLM Sentinel - Rules Engine</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #05050a;
+      --glass-bg: rgba(16, 18, 27, 0.55);
+      --glass-border: rgba(255, 255, 255, 0.06);
+      --text: #ffffff;
+      --text-muted: #8b95a5;
+      --neon-primary: #6366f1; 
+      --safe: #10b981; --danger: #ef4444; 
+    }
+    body {
+      font-family: 'Outfit', sans-serif;
+      color: var(--text); background: var(--bg);
+      background-image: radial-gradient(circle at 15% 50%, rgba(99,102,241,0.15), transparent 25%);
+      padding: 40px; min-height: 100vh;
+    }
+    nav { margin-bottom: 40px; font-size: 1.5rem; font-weight: 800; display: flex; gap:20px;}
+    nav a { color: var(--text-muted); text-decoration: none; padding: 10px 20px; border-radius: 8px; border: 1px solid transparent;}
+    nav a:hover, nav a.active { background: var(--glass-bg); border-color: var(--glass-border); color: #fff;}
+    
+    .card { background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: 20px; padding: 30px; margin-bottom: 30px;}
+    h2 { margin-bottom: 20px; color: var(--neon-primary); }
+    
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--glass-border); }
+    th { color: var(--text-muted); text-transform: uppercase; font-size: 0.8rem; }
+    
+    input, select, button { background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); color: #fff; padding: 10px 15px; border-radius: 8px; font-family: 'Outfit', sans-serif;}
+    button { background: var(--neon-primary); font-weight: 600; cursor: pointer; transition: 0.2s;}
+    button:hover { box-shadow: 0 0 15px var(--neon-primary); }
+    .btn-delete { background: rgba(239, 68, 68, 0.2); color: var(--danger); border-color: var(--danger); padding: 5px 10px;}
+    .btn-delete:hover { background: var(--danger); color: #fff; box-shadow: 0 0 10px var(--danger); }
+    
+    .flex-form { display: flex; gap: 10px; align-items: center; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/rules" class="active">Rules Engine</a>
+    <a href="/playground">Playground</a>
+    <a href="/tokens">Token Analytics</a>
+  </nav>
+
+  <div class="card">
+    <h2>Add New Threat Rule</h2>
+    <form class="flex-form" action="/rules/add" method="POST">
+      <input type="text" name="phrase" placeholder="Keyword or Phrase" required style="flex:1;">
+      <select name="category" required>
+        <option value="prompt_injection">Prompt Injection</option>
+        <option value="illegal_activity">Illegal Activity</option>
+        <option value="violent_harm">Violent Harm</option>
+      </select>
+      <input type="number" name="weight" placeholder="Weight (e.g. 2)" value="2" style="width:100px;" required>
+      <button type="submit">+ Add Rule</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Active Classification Rules</h2>
+    <table>
+      <thead><tr><th>ID</th><th>Phrase</th><th>Category</th><th>Score Weight</th><th>Action</th></tr></thead>
+      <tbody>
+        {% for rule in rules %}
+        <tr>
+          <td>{{ rule.id }}</td>
+          <td style="font-family:'JetBrains Mono'; color:#06b6d4;">{{ rule.phrase }}</td>
+          <td>{{ rule.category }}</td>
+          <td>{{ rule.weight }}</td>
+          <td>
+            <form action="/rules/delete/{{ rule.id }}" method="POST" style="margin:0;">
+              <button type="submit" class="btn-delete">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+        {% if not rules %}
+        <tr><td colspan="5" style="text-align:center; color:#8b95a5;">No rules found. Add one above.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

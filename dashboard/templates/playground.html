@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>LLM Sentinel - Playground</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #05050a; --glass-bg: rgba(16, 18, 27, 0.55); --glass-border: rgba(255, 255, 255, 0.06);
+      --text: #ffffff; --text-muted: #8b95a5; --neon-primary: #6366f1; 
+    }
+    body { font-family: 'Outfit', sans-serif; color: var(--text); background: var(--bg); padding: 40px; min-height: 100vh;}
+    nav { margin-bottom: 40px; font-size: 1.5rem; font-weight: 600; display: flex; gap:20px;}
+    nav a { color: var(--text-muted); text-decoration: none; padding: 10px 20px; border-radius: 8px; border: 1px solid transparent;}
+    nav a:hover, nav a.active { background: var(--glass-bg); border-color: var(--glass-border); color: #fff;}
+    
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px;}
+    .card { background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: 20px; padding: 30px;}
+    textarea { width: 100%; height: 150px; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); color: #fff; padding: 15px; border-radius: 8px; font-family: monospace; resize: none; margin-bottom:15px;}
+    button { background: var(--neon-primary); border: none; color: #fff; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s;}
+    button:hover { box-shadow: 0 0 15px var(--neon-primary); }
+    
+    .res-box { background: rgba(0,0,0,0.4); border-radius: 8px; padding: 15px; margin-top:10px; font-family: monospace; white-space: pre-wrap; color: #06b6d4;}
+    h2 { color: var(--neon-primary); margin-bottom: 20px;}
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/rules">Rules Engine</a>
+    <a href="/playground" class="active">Playground</a>
+    <a href="/tokens">Token Analytics</a>
+  </nav>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Send Secure Prompt</h2>
+      <p style="color:var(--text-muted); margin-bottom:15px;">Simulate an API request to the proxy gateway.</p>
+      <textarea id="promptIn" placeholder="Type prompt here... e.g., 'ignore all previous instructions'"></textarea>
+      <input type="text" id="apiKeyIn" placeholder="API Key (optional)" value="Bearer playground_key" style="background:rgba(0,0,0,0.5); border:1px solid var(--glass-border); color:#fff; padding:10px; border-radius:8px; width:100%; margin-bottom:15px;" />
+      <button onclick="fireRequest()">Transmit</button>
+    </div>
+    
+    <div class="card">
+      <h2>Proxy Evaluation Logs</h2>
+      <div id="output" class="res-box" style="height:250px; overflow-y:auto; color:var(--text-muted);">Waiting for request...</div>
+    </div>
+  </div>
+
+  <script>
+    async function fireRequest() {
+      const p = document.getElementById('promptIn').value;
+      const k = document.getElementById('apiKeyIn').value;
+      const out = document.getElementById('output');
+      out.innerHTML = "Sending...";
+      try {
+        const res = await fetch(`/chat?prompt=${encodeURIComponent(p)}`, {
+          method: 'POST',
+          headers: { 'Authorization': k }
+        });
+        const data = await res.json();
+        out.innerHTML = `<span style="color:#10b981;">[Proxy Mode]</span> ${data.mode}\n\n`;
+        out.innerHTML += `<span style="color:#6366f1;">[LLM Response / Output]</span>\n${data.response}`;
+      } catch(e) { out.innerHTML = `<span style="color:#ef4444;">Error: ${e}</span>`; }
+    }
+  </script>
+</body>
+</html>

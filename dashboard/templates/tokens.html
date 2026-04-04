@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>LLM Sentinel - Tokens</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #05050a; --glass-bg: rgba(16, 18, 27, 0.55); --glass-border: rgba(255, 255, 255, 0.06);
+      --text: #ffffff; --text-muted: #8b95a5; --neon-primary: #6366f1; 
+    }
+    body { font-family: 'Outfit', sans-serif; color: var(--text); background: var(--bg); padding: 40px; min-height: 100vh;}
+    nav { margin-bottom: 40px; font-size: 1.5rem; font-weight: 600; display: flex; gap:20px;}
+    nav a { color: var(--text-muted); text-decoration: none; padding: 10px 20px; border-radius: 8px; border: 1px solid transparent;}
+    nav a:hover, nav a.active { background: var(--glass-bg); border-color: var(--glass-border); color: #fff;}
+    
+    .card { background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: 20px; padding: 30px; margin-bottom: 30px;}
+    h2 { margin-bottom: 20px; color: var(--neon-primary); }
+    
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 15px; text-align: left; border-bottom: 1px solid var(--glass-border); }
+    th { color: var(--text-muted); text-transform: uppercase; font-size: 0.8rem; }
+    td.mono { font-family: 'JetBrains Mono'; color: #06b6d4;}
+    .cost { color: #10b981; font-weight: 600; font-family: 'JetBrains Mono';}
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/rules">Rules Engine</a>
+    <a href="/playground">Playground</a>
+    <a href="/tokens" class="active">Token Analytics</a>
+  </nav>
+
+  <div class="card">
+    <h2>Denial of Wallet Tracker</h2>
+    <p style="color:var(--text-muted); margin-bottom:20px;">Estimated Token Consumption & Equivalent Cost ($0.002 per 1k limits)</p>
+    <table>
+      <thead><tr><th>API Key (Tenant)</th><th>Tokens Consumed</th><th>Estimated Cost ($)</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for user, count in user_tokens.items() %}
+        <tr>
+          <td class="mono">{{ user }}</td>
+          <td>{{ count }}</td>
+          <td class="cost">${{ "%.6f"|format(costs[user]) }}</td>
+          <td>
+            {% if costs[user] > 0.05 %}
+              <span style="color:#ef4444;">Limit Exceeded</span>
+            {% else %}
+              <span style="color:#10b981;">Healthy</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+        {% if not user_tokens %}
+        <tr><td colspan="4" style="text-align:center;">No API Calls Yet.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

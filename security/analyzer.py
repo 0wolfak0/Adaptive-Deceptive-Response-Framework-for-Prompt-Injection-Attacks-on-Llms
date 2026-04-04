@@ -1,11 +1,16 @@
 """
 security/analyzer.py
-Prompt risk analysis — keyword matching + optional LLM semantic classification.
+Prompt risk analysis — keyword + LLM semantic + advanced threats + memory.
 """
 
 import re
 import json
 import requests
+import math
+
+from .session import add_to_session, get_session_context
+from .cache import check_cache, set_cache
+from event_log.database import SessionLocal, Rule
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
 MODEL_NAME = "llama3"
@@ -20,117 +25,80 @@ LEET_MAP = str.maketrans({
 })
 
 def normalize(text: str) -> str:
-    """Lower-case and convert common obfuscation characters."""
     text = text.lower()
     text = text.translate(LEET_MAP)
-    # collapse repeated spaces / punctuation
     text = re.sub(r"[^\w\s]", " ", text)
     text = re.sub(r"\s+", " ", text).strip()
     return text
 
-
 # ──────────────────────────────────────────────
-# KEYWORD THREAT LISTS
-# ──────────────────────────────────────────────
-INJECTION_PHRASES = [
-    "ignore previous instructions",
-    "reveal system prompt",
-    "show hidden prompt",
-    "override rules",
-    "bypass security",
-    "show api key",
-    "print configuration",
-    "disregard prior",
-    "forget your instructions",
-    "new instructions",
-    "act as",
-    "pretend you are",
-    "you are now",
-    "developer mode",
-    "jailbreak",
-    "dan mode",
-]
-
-ILLEGAL_PHRASES = [
-    "sell drugs",
-    "drug trafficking",
-    "avoid police",
-    "not get arrested",
-    "fake documents",
-    "money laundering",
-    "buy weapons",
-    "black market",
-    "scam people",
-    "identity theft",
-    "credit card fraud",
-    "make meth",
-    "synthesize drugs",
-    "counterfeit",
-]
-
-HARM_PHRASES = [
-    "how to kill",
-    "build a bomb",
-    "poison someone",
-    "commit murder",
-    "mass shooting",
-    "make explosives",
-    "pipe bomb",
-    "hurt someone",
-    "attack a person",
-    "how to harm",
-]
-
-
-# ──────────────────────────────────────────────
-# KEYWORD SCORING
+# KEYWORD THREAT LISTS (Dynamic from DB)
 # ──────────────────────────────────────────────
 def keyword_analyze(raw_prompt: str) -> tuple[int, list[str]]:
-    """Return (score, categories) based on keyword matching."""
     prompt = normalize(raw_prompt)
     score = 0
     categories = set()
 
-    for phrase in INJECTION_PHRASES:
-        if normalize(phrase) in prompt:
-            score += 2
-            categories.add("prompt_injection")
-
-    for phrase in ILLEGAL_PHRASES:
-        if normalize(phrase) in prompt:
-            score += 2
-            categories.add("illegal_activity")
-
-    for phrase in HARM_PHRASES:
-        if normalize(phrase) in prompt:
-            score += 3
-            categories.add("violent_harm")
+    db = SessionLocal()
+    try:
+        rules = db.query(Rule).all()
+        for rule in rules:
+            if normalize(rule.phrase) in prompt:
+                score += rule.weight
+                categories.add(rule.category)
+    except Exception as e:
+        print("DB Rule Error:", e)
+    finally:
+        db.close()
 
     return score, list(categories)
 
+# ──────────────────────────────────────────────
+# ADVANCED THREAT DETECTION
+# ──────────────────────────────────────────────
+def calculate_entropy(text: str) -> float:
+    """Shannon entropy for detecting highly obfuscated strings."""
+    if not text:
+        return 0.0
+    entropy = 0.0
+    for x in set(text):
+        p_x = float(text.count(x)) / len(text)
+        if p_x > 0:
+            entropy += - p_x * math.log2(p_x)
+    return entropy
+
+def detect_invisible_chars(text: str) -> bool:
+    """Detects zero-width/formatting Unicode chars used in advanced attacks."""
+    invisible_chars = r'[\u200B-\u200D\uFEFF]'
+    return bool(re.search(invisible_chars, text))
+
+def advanced_threat_analyze(text: str) -> tuple[int, list[str]]:
+    score = 0
+    cats = []
+    if detect_invisible_chars(text):
+        score += 3
+        cats.append("obfuscation_invisible_char")
+    if calculate_entropy(text) > 4.5:
+        score += 2
+        cats.append("obfuscation_high_entropy")
+    return score, cats
 
 # ──────────────────────────────────────────────
 # LLM SEMANTIC CLASSIFIER
 # ──────────────────────────────────────────────
 CLASSIFIER_SYSTEM_PROMPT = """You are a security classifier for an AI assistant.
 Analyze the user's message and return ONLY a JSON object (no markdown, no explanation) with these fields:
-- "risk_level": one of "safe", "medium", "high"
-- "categories": a list containing any of ["prompt_injection", "illegal_activity", "violent_harm"]
-- "reasoning": one short sentence explaining the classification
+- "risk_level": "safe", "medium", or "high"
+- "categories": list containing ["prompt_injection", "illegal_activity", "violent_harm"]
+- "reasoning": short sentence explaining
 
-Examples of HIGH risk: jailbreak attempts, asking for harmful instructions, prompt injection.
-Examples of MEDIUM risk: borderline requests, probing questions, policy-adjacent content.
-Examples of SAFE: normal questions, creative writing, coding help.
+Examples of HIGH risk: jailbreak, harmful instructions, prompt injection.
+Examples of MEDIUM risk: borderline requests, probing questions.
+Examples of SAFE: normal queries, creative writing, coding.
 """
 
 def llm_classify(prompt: str) -> dict:
-    """
-    Use the LLM itself as a semantic classifier.
-    Falls back gracefully if the LLM is unavailable or returns bad JSON.
-    """
-    classification_prompt = (
-        f"{CLASSIFIER_SYSTEM_PROMPT}\n\nUser message to classify: \"{prompt}\"\n\nJSON:"
-    )
+    classification_prompt = f"{CLASSIFIER_SYSTEM_PROMPT}\n\nUser message: \"{prompt}\"\n\nJSON:"
     try:
         response = requests.post(
             OLLAMA_URL,
@@ -139,45 +107,49 @@ def llm_classify(prompt: str) -> dict:
         )
         response.raise_for_status()
         raw = response.json().get("response", "{}")
-        # Strip any accidental markdown fences
         raw = re.sub(r"```json|```", "", raw).strip()
         return json.loads(raw)
     except Exception:
-        # If classification fails, return a neutral result
-        return {"risk_level": "safe", "categories": [], "reasoning": "classifier unavailable"}
-
+        return {"risk_level": "safe", "categories": [], "reasoning": "classifier unavailable/error"}
 
 def semantic_score(classification: dict) -> tuple[int, list[str]]:
-    """Convert LLM classification dict into a numeric score + categories."""
     level = classification.get("risk_level", "safe")
     cats = classification.get("categories", [])
-
     score_map = {"safe": 0, "medium": 2, "high": 5}
     return score_map.get(level, 0), cats
 
+# ──────────────────────────────────────────────
+# PIPELINE
+# ──────────────────────────────────────────────
+def analyze_prompt(prompt: str, api_key: str, use_llm_classifier: bool = True) -> dict:
+    
+    # Cache Check
+    cached = check_cache(prompt)
+    if cached:
+        add_to_session(api_key, prompt)
+        return cached
 
-# ──────────────────────────────────────────────
-# COMBINED ANALYSIS
-# ──────────────────────────────────────────────
-def analyze_prompt(prompt: str, use_llm_classifier: bool = True) -> dict:
-    """
-    Full analysis pipeline combining keyword + semantic classification.
-    Returns a dict with: score, categories, mode, llm_reasoning
-    """
+    # Multi-turn context
+    history = get_session_context(api_key)
+    full_prompt = f"Context history:\n{history}\n\nNew input:\n{prompt}" if history else prompt
+
+    # Analyzers
     kw_score, kw_cats = keyword_analyze(prompt)
-
-    llm_reasoning = ""
+    adv_score, adv_cats = advanced_threat_analyze(prompt)
+    
     sem_score = 0
     sem_cats: list[str] = []
+    llm_reasoning = ""
 
     if use_llm_classifier:
-        classification = llm_classify(prompt)
+        classification = llm_classify(full_prompt)
         sem_score, sem_cats = semantic_score(classification)
         llm_reasoning = classification.get("reasoning", "")
 
-    # Combine: max scoring wins, categories are merged
-    final_score = max(kw_score, sem_score)
-    final_cats = list(set(kw_cats + sem_cats))
+    # Combine
+    # Note: Using max of sem/kw, but ADDING adv_score because it's a multiplier effect
+    final_score = max(kw_score, sem_score) + adv_score
+    final_cats = list(set(kw_cats + sem_cats + adv_cats))
 
     if final_score >= 4:
         mode = "DECEPTION"
@@ -186,7 +158,7 @@ def analyze_prompt(prompt: str, use_llm_classifier: bool = True) -> dict:
     else:
         mode = "SAFE"
 
-    return {
+    analysis = {
         "score": final_score,
         "categories": final_cats,
         "mode": mode,
@@ -194,3 +166,8 @@ def analyze_prompt(prompt: str, use_llm_classifier: bool = True) -> dict:
         "sem_score": sem_score,
         "llm_reasoning": llm_reasoning,
     }
+    
+    set_cache(prompt, analysis)
+    add_to_session(api_key, prompt)
+
+    return analysis
