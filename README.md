@@ -1,3 +1,4 @@
+not yet done. 
 # 🛡️ LLM Security Middleware
 
 A FastAPI-based security layer that wraps a locally hosted **LLaMA3** model (via [Ollama](https://ollama.com)) with prompt injection detection, deception honeypotting, rate limiting, and a real-time monitoring dashboard.
