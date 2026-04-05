@@ -1,35 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LLM Sentinel Enterprise</title>
-  
-  <!-- High-end modern fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
-  <!-- Chart.js -->
+
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+    rel="stylesheet" />
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-    /* Theme Variables - Indigo/Crimson Cyber Aegis Theme */
+
     :root {
       --bg: #05050a;
       --glass-bg: rgba(16, 18, 27, 0.55);
       --glass-border: rgba(255, 255, 255, 0.06);
       --glass-glow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-      
+
       --text: #ffffff;
       --text-muted: #8b95a5;
-      
-      --neon-primary: #6366f1; /* Indigo */
-      --neon-secondary: #a855f7; /* Purple */
-      --neon-accent: #06b6d4; /* Cyan */
-      
-      --safe: #10b981;    /* Emerald */
-      --monitor: #f59e0b; /* Amber */
-      --danger: #ef4444;  /* Crimson */
+
+      --neon-primary: #6366f1;
+      --neon-secondary: #a855f7;
+      --neon-accent: #06b6d4;
+
+      --safe: #10b981;
+      --monitor: #f59e0b;
+      --danger: #ef4444;
 
       --font-main: 'Outfit', sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
@@ -39,8 +48,8 @@
       font-family: var(--font-main);
       color: var(--text);
       background-color: var(--bg);
-      /* Deep radial mesh gradient background */
-      background-image: 
+
+      background-image:
         radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 25%),
         radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.15), transparent 25%);
       background-attachment: fixed;
@@ -48,7 +57,7 @@
       overflow-x: hidden;
     }
 
-    /* ── TOP NAV ── */
+
     nav {
       display: flex;
       justify-content: space-between;
@@ -57,8 +66,10 @@
       background: rgba(5, 5, 10, 0.8);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--glass-border);
-      position: sticky; top: 0; z-index: 100;
-      box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
     }
 
     .nav-logo {
@@ -75,14 +86,17 @@
     }
 
     .shield-icon {
-      width: 24px; height: 28px;
+      width: 24px;
+      height: 28px;
       background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary));
       clip-path: polygon(50% 0%, 100% 20%, 100% 70%, 50% 100%, 0% 70%, 0% 20%);
       box-shadow: 0 0 15px var(--neon-primary);
     }
 
     .system-status {
-      display: flex; align-items: center; gap: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
       font-family: var(--font-mono);
       font-size: 0.85rem;
       color: var(--neon-accent);
@@ -92,24 +106,47 @@
       border: 1px solid rgba(6, 182, 212, 0.3);
       box-shadow: 0 0 10px rgba(6, 182, 212, 0.2);
     }
-    
+
     .pulse-dot {
-      width: 8px; height: 8px; border-radius: 50%; background: var(--neon-accent);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--neon-accent);
       box-shadow: 0 0 8px var(--neon-accent);
       animation: pulse 1.5s infinite;
     }
-    @keyframes pulse { 0% { transform: scale(0.95); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.5; } 100% { transform: scale(0.95); opacity: 1; } }
 
-    /* ── DASHBOARD BENTO GRID ── */
-    main { max-width: 1440px; margin: 40px auto; padding: 0 24px; }
-    
+    @keyframes pulse {
+      0% {
+        transform: scale(0.95);
+        opacity: 1;
+      }
+
+      50% {
+        transform: scale(1.2);
+        opacity: 0.5;
+      }
+
+      100% {
+        transform: scale(0.95);
+        opacity: 1;
+      }
+    }
+
+
+    main {
+      max-width: 1440px;
+      margin: 40px auto;
+      padding: 0 24px;
+    }
+
     .bento-grid {
       display: grid;
       grid-template-columns: repeat(12, 1fr);
       grid-gap: 24px;
       grid-auto-rows: minmax(120px, auto);
     }
-    
+
     .bento-item {
       background: var(--glass-bg);
       backdrop-filter: blur(16px);
@@ -119,81 +156,210 @@
       padding: 28px;
       box-shadow: var(--glass-glow);
       transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
-      display: flex; flex-direction: column;
-      position: relative; overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
     }
-    
+
     .bento-item:hover {
       transform: translateY(-5px);
       box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5), 0 0 15px rgba(99, 102, 241, 0.15);
       border-color: rgba(99, 102, 241, 0.4);
     }
 
-    h2 { font-size: 1.1rem; font-weight: 600; color: var(--text-muted); margin-bottom: 20px; letter-spacing: 0.05em; text-transform: uppercase;}
+    h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
 
-    /* GRID PLACEMENTS */
-    .stat-total { grid-column: span 3; }
-    .stat-safe { grid-column: span 3; }
-    .stat-monitor { grid-column: span 3; }
-    .stat-danger { grid-column: span 3; }
-    
-    .chart-timeline { grid-column: span 8; grid-row: span 3; }
-    .widget-ticker { grid-column: span 4; grid-row: span 3; }
-    
-    .chart-donut { grid-column: span 4; grid-row: span 3;}
-    .chart-ip { grid-column: span 8; grid-row: span 3; }
+
+    .stat-total {
+      grid-column: span 3;
+    }
+
+    .stat-safe {
+      grid-column: span 3;
+    }
+
+    .stat-monitor {
+      grid-column: span 3;
+    }
+
+    .stat-danger {
+      grid-column: span 3;
+    }
+
+    .chart-timeline {
+      grid-column: span 8;
+      grid-row: span 3;
+    }
+
+    .widget-ticker {
+      grid-column: span 4;
+      grid-row: span 3;
+    }
+
+    .chart-donut {
+      grid-column: span 4;
+      grid-row: span 3;
+    }
+
+    .chart-ip {
+      grid-column: span 8;
+      grid-row: span 3;
+    }
 
     @media (max-width: 1024px) {
-      .stat-total, .stat-safe, .stat-monitor, .stat-danger { grid-column: span 6; }
-      .chart-timeline, .widget-ticker, .chart-donut, .chart-ip { grid-column: span 12; }
+
+      .stat-total,
+      .stat-safe,
+      .stat-monitor,
+      .stat-danger {
+        grid-column: span 6;
+      }
+
+      .chart-timeline,
+      .widget-ticker,
+      .chart-donut,
+      .chart-ip {
+        grid-column: span 12;
+      }
     }
-    
+
     @media (max-width: 600px) {
-      .stat-total, .stat-safe, .stat-monitor, .stat-danger { grid-column: span 12; }
+
+      .stat-total,
+      .stat-safe,
+      .stat-monitor,
+      .stat-danger {
+        grid-column: span 12;
+      }
     }
 
-    /* ── STAT CARDS ── */
-    .stat-val { font-size: 3.5rem; font-weight: 800; line-height: 1; margin: auto 0; font-family: var(--font-mono); }
-    .stat-total .stat-val { background: linear-gradient(90deg, #fff, var(--neon-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .stat-safe .stat-val { color: var(--safe); text-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
-    .stat-monitor .stat-val { color: var(--monitor); text-shadow: 0 0 20px rgba(245, 158, 11, 0.4); }
-    .stat-danger .stat-val { color: var(--danger); text-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
 
-    /* ── LIVE TICKER WIDGET ── */
+    .stat-val {
+      font-size: 3.5rem;
+      font-weight: 800;
+      line-height: 1;
+      margin: auto 0;
+      font-family: var(--font-mono);
+    }
+
+    .stat-total .stat-val {
+      background: linear-gradient(90deg, #fff, var(--neon-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .stat-safe .stat-val {
+      color: var(--safe);
+      text-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+    }
+
+    .stat-monitor .stat-val {
+      color: var(--monitor);
+      text-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+    }
+
+    .stat-danger .stat-val {
+      color: var(--danger);
+      text-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+    }
+
+
     .ticker-container {
-      flex: 1; overflow-y: auto; overflow-x: hidden;
-      display: flex; flex-direction: column; gap: 12px;
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
       padding-right: 8px;
     }
-    .ticker-container::-webkit-scrollbar { width: 6px; }
-    .ticker-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-    
+
+    .ticker-container::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .ticker-container::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+    }
+
     .ticker-item {
       padding: 12px 14px;
       border-radius: 12px;
-      background: rgba(0,0,0,0.3);
+      background: rgba(0, 0, 0, 0.3);
       border-left: 4px solid var(--text-muted);
       font-size: 0.85rem;
       animation: slideIn 0.3s ease-out forwards;
-      display: flex; flex-direction: column; gap: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
-    @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-    
-    .ticker-item.SAFE { border-left-color: var(--safe); }
-    .ticker-item.MONITOR { border-left-color: var(--monitor); }
-    .ticker-item.DECEPTION { border-left-color: var(--danger); background: linear-gradient(90deg, rgba(239,68,68,0.1), transparent); }
-    
-    .ticker-header { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); }
-    .ticker-prompt { color: #e2e8f0; font-weight: 400; word-break: break-all; }
-    .ticker-user { color: var(--neon-accent); }
 
-    /* ── CHART CONTAINERS ── */
-    .chart-container-inner { position: relative; width: 100%; height: 100%; min-height: 250px; flex: 1; }
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(20px);
+      }
 
-    /* BACKGROUND GLOWS */
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .ticker-item.SAFE {
+      border-left-color: var(--safe);
+    }
+
+    .ticker-item.MONITOR {
+      border-left-color: var(--monitor);
+    }
+
+    .ticker-item.DECEPTION {
+      border-left-color: var(--danger);
+      background: linear-gradient(90deg, rgba(239, 68, 68, 0.1), transparent);
+    }
+
+    .ticker-header {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .ticker-prompt {
+      color: #e2e8f0;
+      font-weight: 400;
+      word-break: break-all;
+    }
+
+    .ticker-user {
+      color: var(--neon-accent);
+    }
+
+
+    .chart-container-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: 250px;
+      flex: 1;
+    }
+
+
     .glow-blob {
       position: absolute;
-      width: 150px; height: 150px;
+      width: 150px;
+      height: 150px;
       background: var(--neon-primary);
       filter: blur(80px);
       border-radius: 50%;
@@ -201,174 +367,185 @@
       z-index: -1;
       pointer-events: none;
     }
-    .bento-item.stat-danger .glow-blob { background: var(--danger); top: -50px; right: -50px; }
-    .bento-item.stat-safe .glow-blob { background: var(--safe); bottom: -50px; left: -50px; }
 
+    .bento-item.stat-danger .glow-blob {
+      background: var(--danger);
+      top: -50px;
+      right: -50px;
+    }
+
+    .bento-item.stat-safe .glow-blob {
+      background: var(--safe);
+      bottom: -50px;
+      left: -50px;
+    }
   </style>
 </head>
+
 <body>
 
-<nav>
-  <div class="nav-logo">
-    <div class="shield-icon"></div>
-    Sentinel Core
-  </div>
-  <div class="system-status">
-    <div class="pulse-dot"></div>
-    Aegis Active: Analyzing Traffic
-  </div>
-</nav>
+  <nav>
+    <div class="nav-logo">
+      <div class="shield-icon"></div>
+      Sentinel Core
+    </div>
+    <div class="system-status">
+      <div class="pulse-dot"></div>
+      Aegis Active: Analyzing Traffic
+    </div>
+  </nav>
 
-<main>
-  <div class="bento-grid" id="dashboard-grid">
-    <!-- STATS -->
-    <div class="bento-item stat-total">
-      <div class="glow-blob" style="background: var(--neon-secondary); top:0; left:0;"></div>
-      <h2>Global Intercepts</h2>
-      <div class="stat-val" id="val-total">-</div>
-    </div>
-    
-    <div class="bento-item stat-safe">
-      <div class="glow-blob"></div>
-      <h2>Cleared Traffic</h2>
-      <div class="stat-val" id="val-safe">-</div>
-    </div>
-    
-    <div class="bento-item stat-monitor">
-      <div class="glow-blob" style="background: var(--monitor); bottom:0; right:0;"></div>
-      <h2>Anomalies Detected</h2>
-      <div class="stat-val" id="val-monitor">-</div>
-    </div>
-    
-    <div class="bento-item stat-danger">
-      <div class="glow-blob"></div>
-      <h2>Critical Threats Blocked</h2>
-      <div class="stat-val" id="val-danger">-</div>
-    </div>
+  <main>
+    <div class="bento-grid" id="dashboard-grid">
 
-    <!-- MAIN TIMELINE -->
-    <div class="bento-item chart-timeline">
-      <h2>Volume Over Time</h2>
-      <div class="chart-container-inner"><canvas id="timelineChart"></canvas></div>
-    </div>
+      <div class="bento-item stat-total">
+        <div class="glow-blob" style="background: var(--neon-secondary); top:0; left:0;"></div>
+        <h2>Global Intercepts</h2>
+        <div class="stat-val" id="val-total">-</div>
+      </div>
 
-    <!-- LIVE THREAT TICKER -->
-    <div class="bento-item widget-ticker">
-      <h2>🔴 Live Threat Feed</h2>
-      <div class="ticker-container" id="ticker-feed">
-        <div style="color:var(--text-muted); font-size:0.85rem; font-style:italic;">Awaiting signals...</div>
+      <div class="bento-item stat-safe">
+        <div class="glow-blob"></div>
+        <h2>Cleared Traffic</h2>
+        <div class="stat-val" id="val-safe">-</div>
+      </div>
+
+      <div class="bento-item stat-monitor">
+        <div class="glow-blob" style="background: var(--monitor); bottom:0; right:0;"></div>
+        <h2>Anomalies Detected</h2>
+        <div class="stat-val" id="val-monitor">-</div>
+      </div>
+
+      <div class="bento-item stat-danger">
+        <div class="glow-blob"></div>
+        <h2>Critical Threats Blocked</h2>
+        <div class="stat-val" id="val-danger">-</div>
+      </div>
+
+
+      <div class="bento-item chart-timeline">
+        <h2>Volume Over Time</h2>
+        <div class="chart-container-inner"><canvas id="timelineChart"></canvas></div>
+      </div>
+
+
+      <div class="bento-item widget-ticker">
+        <h2>🔴 Live Threat Feed</h2>
+        <div class="ticker-container" id="ticker-feed">
+          <div style="color:var(--text-muted); font-size:0.85rem; font-style:italic;">Awaiting signals...</div>
+        </div>
+      </div>
+
+
+      <div class="bento-item chart-donut">
+        <h2>Risk Matrix</h2>
+        <div class="chart-container-inner"><canvas id="donutChart"></canvas></div>
+      </div>
+
+
+      <div class="bento-item chart-ip">
+        <h2>Top Flagged Entities (API Keys)</h2>
+        <div class="chart-container-inner"><canvas id="ipChart"></canvas></div>
       </div>
     </div>
+  </main>
 
-    <!-- RISK DISTRIBUTION -->
-    <div class="bento-item chart-donut">
-      <h2>Risk Matrix</h2>
-      <div class="chart-container-inner"><canvas id="donutChart"></canvas></div>
-    </div>
+  <script>
 
-    <!-- TOP USERS -->
-    <div class="bento-item chart-ip">
-      <h2>Top Flagged Entities (API Keys)</h2>
-      <div class="chart-container-inner"><canvas id="ipChart"></canvas></div>
-    </div>
-  </div>
-</main>
+    Chart.defaults.color = '#8b95a5';
+    Chart.defaults.font.family = "'Outfit', sans-serif";
+    const gridOptions = { color: 'rgba(255, 255, 255, 0.05)', tickColor: 'transparent' };
 
-<script>
-// Chart Settings for Dark UI
-Chart.defaults.color = '#8b95a5';
-Chart.defaults.font.family = "'Outfit', sans-serif";
-const gridOptions = { color: 'rgba(255, 255, 255, 0.05)', tickColor: 'transparent' };
+    let charts = {};
 
-let charts = {};
+    function initCharts() {
+      const ctxTimeline = document.getElementById('timelineChart').getContext('2d');
 
-function initCharts() {
-  const ctxTimeline = document.getElementById('timelineChart').getContext('2d');
-  
-  // Create gradient for line chart
-  let gradientLine = ctxTimeline.createLinearGradient(0, 0, 0, 400);
-  gradientLine.addColorStop(0, 'rgba(99, 102, 241, 0.5)'); // Indigo
-  gradientLine.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
 
-  charts.timeline = new Chart(ctxTimeline, {
-    type: 'line',
-    data: { labels: [], datasets: [{ label: 'Requests', data: [], borderColor: '#6366f1', backgroundColor: gradientLine, fill: true, tension: 0.4, borderWidth: 3, pointBackgroundColor: '#fff', pointRadius: 4, pointHoverRadius: 8, pointHoverBackgroundColor: '#a855f7' }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(5,5,10,0.9)', titleFont: { size: 14 }, bodyFont: { size: 14 }, padding: 12, cornerRadius: 8, borderColor: 'rgba(99,102,241,0.5)', borderWidth: 1 } }, scales: { x: { grid: gridOptions }, y: { grid: gridOptions, beginAtZero: true } } }
-  });
+      let gradientLine = ctxTimeline.createLinearGradient(0, 0, 0, 400);
+      gradientLine.addColorStop(0, 'rgba(99, 102, 241, 0.5)'); // Indigo
+      gradientLine.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
 
-  charts.donut = new Chart(document.getElementById('donutChart'), {
-    type: 'doughnut',
-    data: { labels: ['Safe', 'Monitor', 'Deception'], datasets: [{ data: [0,0,0], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderWidth: 0, hoverOffset: 8}] },
-    options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' } }, tooltip: { backgroundColor: 'rgba(5,5,10,0.9)', padding: 12, cornerRadius: 8 } } }
-  });
+      charts.timeline = new Chart(ctxTimeline, {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'Requests', data: [], borderColor: '#6366f1', backgroundColor: gradientLine, fill: true, tension: 0.4, borderWidth: 3, pointBackgroundColor: '#fff', pointRadius: 4, pointHoverRadius: 8, pointHoverBackgroundColor: '#a855f7' }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(5,5,10,0.9)', titleFont: { size: 14 }, bodyFont: { size: 14 }, padding: 12, cornerRadius: 8, borderColor: 'rgba(99,102,241,0.5)', borderWidth: 1 } }, scales: { x: { grid: gridOptions }, y: { grid: gridOptions, beginAtZero: true } } }
+      });
 
-  charts.ip = new Chart(document.getElementById('ipChart'), {
-    type: 'bar',
-    data: { labels: [], datasets: [{ label: 'Events', data: [], backgroundColor: '#06b6d4', borderRadius: 8, hoverBackgroundColor: '#a855f7'}] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: gridOptions, beginAtZero: true } } }
-  });
-}
+      charts.donut = new Chart(document.getElementById('donutChart'), {
+        type: 'doughnut',
+        data: { labels: ['Safe', 'Monitor', 'Deception'], datasets: [{ data: [0, 0, 0], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderWidth: 0, hoverOffset: 8 }] },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' } }, tooltip: { backgroundColor: 'rgba(5,5,10,0.9)', padding: 12, cornerRadius: 8 } } }
+      });
 
-function updateStats(data) {
-  document.getElementById('val-total').innerText = data.total_requests;
-  document.getElementById('val-safe').innerText = data.safe_count;
-  document.getElementById('val-monitor').innerText = data.monitor_count;
-  document.getElementById('val-danger').innerText = data.deception_count;
-}
+      charts.ip = new Chart(document.getElementById('ipChart'), {
+        type: 'bar',
+        data: { labels: [], datasets: [{ label: 'Events', data: [], backgroundColor: '#06b6d4', borderRadius: 8, hoverBackgroundColor: '#a855f7' }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: gridOptions, beginAtZero: true } } }
+      });
+    }
 
-let lastEventCount = 0;
-function updateTicker(events) {
-  const feed = document.getElementById('ticker-feed');
-  const newEvents = events.slice(0, 15); // Show last 15
-  
-  // If count hasn't changed, skip DOM redraw to prevent animation restart
-  if(events.length === lastEventCount && feed.children.length > 1) return;
-  lastEventCount = events.length;
-  
-  feed.innerHTML = newEvents.map(e => `
+    function updateStats(data) {
+      document.getElementById('val-total').innerText = data.total_requests;
+      document.getElementById('val-safe').innerText = data.safe_count;
+      document.getElementById('val-monitor').innerText = data.monitor_count;
+      document.getElementById('val-danger').innerText = data.deception_count;
+    }
+
+    let lastEventCount = 0;
+    function updateTicker(events) {
+      const feed = document.getElementById('ticker-feed');
+      const newEvents = events.slice(0, 15);
+
+
+      if (events.length === lastEventCount && feed.children.length > 1) return;
+      lastEventCount = events.length;
+
+      feed.innerHTML = newEvents.map(e => `
     <div class="ticker-item ${e.risk_mode}">
       <div class="ticker-header">
         <span>[${new Date(e.timestamp).toLocaleTimeString()}]</span>
-        <span class="ticker-user">${e.api_key.substring(0,10)}</span>
+        <span class="ticker-user">${e.api_key.substring(0, 10)}</span>
         <span style="color:${e.risk_mode === 'DECEPTION' ? '#ef4444' : e.risk_mode === 'MONITOR' ? '#f59e0b' : '#10b981'}">${e.risk_mode}</span>
       </div>
       <div class="ticker-prompt">&gt; ${e.prompt}</div>
       ${e.categories !== 'none' ? `<div style="font-size:0.7rem; color:#a855f7; font-family:monospace;">${e.categories}</div>` : ''}
     </div>
   `).join('');
-}
+    }
 
-function updateCharts(data) {
-  // Timeline
-  charts.timeline.data.labels = Object.keys(data.events_per_day);
-  charts.timeline.data.datasets[0].data = Object.values(data.events_per_day);
-  charts.timeline.update();
+    function updateCharts(data) {
 
-  // Donut
-  charts.donut.data.datasets[0].data = [data.safe_count, data.monitor_count, data.deception_count];
-  charts.donut.update();
+      charts.timeline.data.labels = Object.keys(data.events_per_day);
+      charts.timeline.data.datasets[0].data = Object.values(data.events_per_day);
+      charts.timeline.update();
 
-  // IP/User Bar
-  charts.ip.data.labels = Object.keys(data.top_users);
-  charts.ip.data.datasets[0].data = Object.values(data.top_users);
-  charts.ip.update();
-}
 
-async function fetchDashboard() {
-  try {
-    const res = await fetch('/stats');
-    const data = await res.json();
-    updateStats(data);
-    updateCharts(data);
-    updateTicker(data.recent_events);
-  } catch (e) {
-    console.error("Dashboard Sync Error:", e);
-  }
-}
+      charts.donut.data.datasets[0].data = [data.safe_count, data.monitor_count, data.deception_count];
+      charts.donut.update();
 
-initCharts();
-fetchDashboard();
-setInterval(fetchDashboard, 3000); // Super fast 3s polling for real-time cyber feel!
-</script>
+
+      charts.ip.data.labels = Object.keys(data.top_users);
+      charts.ip.data.datasets[0].data = Object.values(data.top_users);
+      charts.ip.update();
+    }
+
+    async function fetchDashboard() {
+      try {
+        const res = await fetch('/stats');
+        const data = await res.json();
+        updateStats(data);
+        updateCharts(data);
+        updateTicker(data.recent_events);
+      } catch (e) {
+        console.error("Dashboard Sync Error:", e);
+      }
+    }
+
+    initCharts();
+    fetchDashboard();
+    setInterval(fetchDashboard, 3000); 
+  </script>
 </body>
+
 </html>

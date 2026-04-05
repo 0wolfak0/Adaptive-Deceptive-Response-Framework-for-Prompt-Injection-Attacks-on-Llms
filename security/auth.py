@@ -7,7 +7,7 @@ from fastapi.security import APIKeyHeader
 
 api_key_header = APIKeyHeader(name="Authorization", auto_error=False)
 
-# Simple static demo keys. In production, these should be in a DB.
+
 VALID_API_KEYS = {
     "Bearer super-secret-key-1": "tenant_a_user",
     "Bearer dev-key-xyz": "tenant_b_dev",

@@ -28,7 +28,7 @@ async def fire_prompt(client, prompt, expected):
         )
         data = response.json()
         mode = data.get("mode", "UNKNOWN")
-        # Accept Deception or Monitor for true threats
+       
         success = mode == expected or (expected in ["DECEPTION", "MONITOR"] and mode in ["DECEPTION", "MONITOR"])
         return success, mode
     except Exception as e:

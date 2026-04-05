@@ -15,7 +15,6 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 import requests as http_requests
 
-# ── Internal modules ─────────────────────────
 from security.analyzer  import analyze_prompt
 from security.deception import dynamic_deceptive_response, static_deceptive_response
 from security.auth      import get_api_key
@@ -23,11 +22,9 @@ from security.dlp       import redact_text, detect_pii
 from event_log.logger   import log_event
 from dashboard.routes   import router as dashboard_router
 
-# ── LLM config ───────────────────────────────
 OLLAMA_URL  = "http://localhost:11434/api/generate"
 MODEL_NAME  = "llama3"
 
-# ── Rate limiter ─────────────────────────────
 def rate_limit_key(request: Request):
     auth = request.headers.get("Authorization")
     return auth if auth else get_remote_address(request)
@@ -68,7 +65,6 @@ def health():
 def chat(prompt: str, request: Request, api_key: str = Depends(get_api_key)):
     client_ip = request.client.host if request.client else "unknown"
 
-    # 1. Analyze prompt (with cache & session context)
     analysis = analyze_prompt(prompt, api_key=api_key, use_llm_classifier=True)
 
     score       = analysis["score"]
@@ -78,7 +74,6 @@ def chat(prompt: str, request: Request, api_key: str = Depends(get_api_key)):
     sem_score   = analysis["sem_score"]
     reasoning   = analysis["llm_reasoning"]
 
-    # 2. Handle Deception Early (don't call LLM)
     if mode == "DECEPTION":
         deception_response = dynamic_deceptive_response(prompt)
         log_event(
@@ -103,11 +98,11 @@ def chat(prompt: str, request: Request, api_key: str = Depends(get_api_key)):
             "mode": "MONITOR",
         })
 
-    # 3. Safe -> Call LLM
+   
     raw_response = call_llm(prompt)
     est_tokens = (len(prompt) + len(raw_response)) // 4
     
-    # 4. Log the full event with tokens
+    
     log_event(
         prompt=prompt,
         score=score,
