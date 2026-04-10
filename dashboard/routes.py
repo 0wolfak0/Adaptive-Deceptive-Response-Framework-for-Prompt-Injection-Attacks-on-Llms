@@ -65,27 +65,33 @@ def dashboard(request: Request):
 @router.get("/rules", response_class=HTMLResponse)
 def get_rules_page(request: Request):
     db = SessionLocal()
-    rules = db.query(Rule).all()
-    db.close()
-    return templates.TemplateResponse("rules.html", {"request": request, "rules": rules})
+    try:
+        rules = db.query(Rule).all()
+        return templates.TemplateResponse("rules.html", {"request": request, "rules": rules})
+    finally:
+        db.close()
 
 @router.post("/rules/add")
 def add_rule(phrase: str = Form(...), category: str = Form(...), weight: int = Form(...)):
     db = SessionLocal()
-    if not db.query(Rule).filter_by(phrase=phrase).first():
-        db.add(Rule(phrase=phrase, category=category, weight=weight))
-        db.commit()
-    db.close()
+    try:
+        if not db.query(Rule).filter_by(phrase=phrase).first():
+            db.add(Rule(phrase=phrase, category=category, weight=weight))
+            db.commit()
+    finally:
+        db.close()
     return RedirectResponse(url="/rules", status_code=303)
 
 @router.post("/rules/delete/{rule_id}")
 def delete_rule(rule_id: int):
     db = SessionLocal()
-    rule = db.query(Rule).filter_by(id=rule_id).first()
-    if rule:
-        db.delete(rule)
-        db.commit()
-    db.close()
+    try:
+        rule = db.query(Rule).filter_by(id=rule_id).first()
+        if rule:
+            db.delete(rule)
+            db.commit()
+    finally:
+        db.close()
     return RedirectResponse(url="/rules", status_code=303)
 
 # ──────────────────────────────────────────────

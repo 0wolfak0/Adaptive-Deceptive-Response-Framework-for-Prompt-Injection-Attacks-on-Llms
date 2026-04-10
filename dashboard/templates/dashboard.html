@@ -79,6 +79,7 @@
       text-transform: uppercase;
       background: linear-gradient(90deg, #fff, var(--neon-secondary));
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
       display: flex;
       align-items: center;
@@ -253,6 +254,7 @@
     .stat-total .stat-val {
       background: linear-gradient(90deg, #fff, var(--neon-secondary));
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
@@ -388,6 +390,12 @@
     <div class="nav-logo">
       <div class="shield-icon"></div>
       Sentinel Core
+    </div>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <a href="/dashboard" style="color:#fff; text-decoration:none; padding:8px 16px; border-radius:8px; background:rgba(99,102,241,0.2); border:1px solid rgba(99,102,241,0.4); font-size:0.9rem; font-weight:600;">Dashboard</a>
+      <a href="/rules" style="color:var(--text-muted); text-decoration:none; padding:8px 16px; border-radius:8px; border:1px solid transparent; font-size:0.9rem; transition:0.2s;" onmouseover="this.style.background='var(--glass-bg)';this.style.borderColor='var(--glass-border)';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent';this.style.color='var(--text-muted)'">Rules</a>
+      <a href="/playground" style="color:var(--text-muted); text-decoration:none; padding:8px 16px; border-radius:8px; border:1px solid transparent; font-size:0.9rem; transition:0.2s;" onmouseover="this.style.background='var(--glass-bg)';this.style.borderColor='var(--glass-border)';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent';this.style.color='var(--text-muted)'">Playground</a>
+      <a href="/tokens" style="color:var(--text-muted); text-decoration:none; padding:8px 16px; border-radius:8px; border:1px solid transparent; font-size:0.9rem; transition:0.2s;" onmouseover="this.style.background='var(--glass-bg)';this.style.borderColor='var(--glass-border)';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.borderColor='transparent';this.style.color='var(--text-muted)'">Tokens</a>
     </div>
     <div class="system-status">
       <div class="pulse-dot"></div>

@@ -69,7 +69,7 @@ def calculate_entropy(text: str) -> float:
 
 def detect_invisible_chars(text: str) -> bool:
     """Detects zero-width/formatting Unicode chars used in advanced attacks."""
-    invisible_chars = r'[\u200B-\u200D\uFEFF]'
+    invisible_chars = '[\u200B-\u200D\uFEFF]'
     return bool(re.search(invisible_chars, text))
 
 def advanced_threat_analyze(text: str) -> tuple[int, list[str]]:

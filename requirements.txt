@@ -4,3 +4,5 @@ requests
 slowapi
 jinja2
 python-multipart
+sqlalchemy
+httpx
