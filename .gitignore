@@ -29,3 +29,5 @@ Thumbs.db
 # Env files (never commit secrets)
 .env
 *.env
+attack_log.csv
+*.db

@@ -1,26 +1,20 @@
-"""
-security/cache.py
-Semantic caching for fast analysis skipping.
-"""
 import hashlib
 import re
+from cachetools import TTLCache
 
-SEMANTIC_CACHE = {}
+# Expires after 5 minutes, max 1000 entries — so stale SAFE results don't persist forever
+SEMANTIC_CACHE = TTLCache(maxsize=1000, ttl=300)
 
 def _normalize(prompt: str) -> str:
-    # Lowercase, collapse spaces, remove punctuation
     p = prompt.lower().strip()
     p = re.sub(r"[^\w\s]", "", p)
     return re.sub(r"\s+", " ", p)
 
 def get_cache_key(prompt: str) -> str:
-    normalized = _normalize(prompt)
-    return hashlib.md5(normalized.encode("utf-8")).hexdigest()
+    return hashlib.md5(_normalize(prompt).encode("utf-8")).hexdigest()
 
 def check_cache(prompt: str):
-    key = get_cache_key(prompt)
-    return SEMANTIC_CACHE.get(key)
+    return SEMANTIC_CACHE.get(get_cache_key(prompt))
 
 def set_cache(prompt: str, analysis: dict):
-    key = get_cache_key(prompt)
-    SEMANTIC_CACHE[key] = analysis
+    SEMANTIC_CACHE[get_cache_key(prompt)] = analysis

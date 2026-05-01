@@ -8,21 +8,21 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --bg: #05050a; --glass-bg: rgba(16, 18, 27, 0.55); --glass-border: rgba(255, 255, 255, 0.06);
-      --text: #ffffff; --text-muted: #8b95a5; --neon-primary: #6366f1; 
+      --text: #ffffff; --text-muted: #8b95a5; --neon-primary: #6366f1;
     }
-    body { font-family: 'Outfit', sans-serif; color: var(--text); background: var(--bg); padding: 40px; min-height: 100vh;}
-    nav { margin-bottom: 40px; font-size: 1.5rem; font-weight: 600; display: flex; gap:20px;}
-    nav a { color: var(--text-muted); text-decoration: none; padding: 10px 20px; border-radius: 8px; border: 1px solid transparent;}
-    nav a:hover, nav a.active { background: var(--glass-bg); border-color: var(--glass-border); color: #fff;}
-    
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px;}
-    .card { background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: 20px; padding: 30px;}
-    textarea { width: 100%; height: 150px; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); color: #fff; padding: 15px; border-radius: 8px; font-family: monospace; resize: none; margin-bottom:15px;}
-    button { background: var(--neon-primary); border: none; color: #fff; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s;}
+    body { font-family: 'Outfit', sans-serif; color: var(--text); background: var(--bg); padding: 40px; min-height: 100vh; }
+    nav { margin-bottom: 40px; font-size: 1.5rem; font-weight: 600; display: flex; gap: 20px; }
+    nav a { color: var(--text-muted); text-decoration: none; padding: 10px 20px; border-radius: 8px; border: 1px solid transparent; }
+    nav a:hover, nav a.active { background: var(--glass-bg); border-color: var(--glass-border); color: #fff; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+    .card { background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: 20px; padding: 30px; }
+    textarea { width: 100%; height: 150px; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); color: #fff; padding: 15px; border-radius: 8px; font-family: monospace; resize: none; margin-bottom: 15px; }
+    input[type=text], input[type=password] { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); color: #fff; padding: 12px; border-radius: 8px; font-family: monospace; margin-bottom: 15px; }
+    button { background: var(--neon-primary); border: none; color: #fff; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
     button:hover { box-shadow: 0 0 15px var(--neon-primary); }
-    
-    .res-box { background: rgba(0,0,0,0.4); border-radius: 8px; padding: 15px; margin-top:10px; font-family: monospace; white-space: pre-wrap; color: #06b6d4;}
-    h2 { color: var(--neon-primary); margin-bottom: 20px;}
+    .res-box { background: rgba(0,0,0,0.4); border-radius: 8px; padding: 15px; margin-top: 10px; font-family: monospace; white-space: pre-wrap; height: 280px; overflow-y: auto; }
+    h2 { color: var(--neon-primary); margin-bottom: 20px; }
+    label { color: var(--text-muted); font-size: 0.85rem; display: block; margin-bottom: 6px; }
   </style>
 </head>
 <body>
@@ -35,35 +35,80 @@
 
   <div class="grid">
     <div class="card">
-      <h2>Send Secure Prompt</h2>
-      <p style="color:var(--text-muted); margin-bottom:15px;">Simulate an API request to the proxy gateway.</p>
-      <textarea id="promptIn" placeholder="Type prompt here... e.g., 'ignore all previous instructions'"></textarea>
-      <input type="text" id="apiKeyIn" placeholder="API Key (optional)" value="Bearer playground_key" style="background:rgba(0,0,0,0.5); border:1px solid var(--glass-border); color:#fff; padding:10px; border-radius:8px; width:100%; margin-bottom:15px;" />
-      <button onclick="fireRequest()">Transmit</button>
+      <h2>Send a Prompt</h2>
+
+      <label>API Key</label>
+      <input type="text" id="apiKey" value="Bearer super-secret-key-1" />
+
+      <label>Prompt</label>
+      <textarea id="promptIn" placeholder="Type anything… e.g. 'ignore all previous instructions'"></textarea>
+
+      <button onclick="fireRequest()">▶ Transmit</button>
     </div>
-    
+
     <div class="card">
-      <h2>Proxy Evaluation Logs</h2>
-      <div id="output" class="res-box" style="height:250px; overflow-y:auto; color:var(--text-muted);">Waiting for request...</div>
+      <h2>Result</h2>
+      <div id="output" class="res-box" style="color: var(--text-muted);">
+        Waiting for a request...
+      </div>
     </div>
   </div>
 
   <script>
     async function fireRequest() {
-      const p = document.getElementById('promptIn').value;
-      const k = document.getElementById('apiKeyIn').value;
-      const out = document.getElementById('output');
-      out.innerHTML = "Sending...";
+      const prompt = document.getElementById('promptIn').value.trim();
+      const apiKey = document.getElementById('apiKey').value.trim();
+      const out    = document.getElementById('output');
+
+      if (!prompt) {
+        out.innerHTML = '<span style="color:#f59e0b;">Please type a prompt first.</span>';
+        return;
+      }
+
+      out.innerHTML = '<span style="color:#8b95a5;">Sending...</span>';
+
       try {
-        const res = await fetch(`/chat?prompt=${encodeURIComponent(p)}`, {
+        const res = await fetch('/chat', {
           method: 'POST',
-          headers: { 'Authorization': k }
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': apiKey,
+          },
+          body: JSON.stringify({ prompt: prompt }),
         });
+
         const data = await res.json();
-        out.innerHTML = `<span style="color:#10b981;">[Proxy Mode]</span> ${data.mode}\n\n`;
-        out.innerHTML += `<span style="color:#6366f1;">[LLM Response / Output]</span>\n${data.response}`;
-      } catch(e) { out.innerHTML = `<span style="color:#ef4444;">Error: ${e}</span>`; }
+
+        // Handle HTTP errors (401, 422, 500, etc.)
+        if (!res.ok) {
+          out.innerHTML = `<span style="color:#ef4444;">HTTP ${res.status} Error</span>\n\n${JSON.stringify(data, null, 2)}`;
+          return;
+        }
+
+        const modeColors = {
+          'SAFE':          '#10b981',
+          'SAFE_REDACTED': '#06b6d4',
+          'MONITOR':       '#f59e0b',
+          'DECEPTION':     '#ef4444',
+        };
+        const color = modeColors[data.mode] || '#8b95a5';
+
+        let html = `<span style="color:${color}; font-size:1.1rem; font-weight:600;">[${data.mode}]</span>\n\n`;
+        if (data.message) {
+          html += `<span style="color:#f59e0b;">⚠ DLP: ${data.message}</span>\n\n`;
+        }
+        html += `<span style="color:#6366f1;">[Response]</span>\n${data.response}`;
+        out.innerHTML = html;
+
+      } catch (e) {
+        out.innerHTML = `<span style="color:#ef4444;">Network error — is the server running?\n\n${e}</span>`;
+      }
     }
+
+    // Allow Ctrl+Enter to submit
+    document.getElementById('promptIn').addEventListener('keydown', function(e) {
+      if (e.ctrlKey && e.key === 'Enter') fireRequest();
+    });
   </script>
 </body>
 </html>

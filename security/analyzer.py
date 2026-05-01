@@ -1,80 +1,43 @@
-"""
-security/analyzer.py
-Prompt risk analysis — keyword + LLM semantic + advanced threats + memory.
-"""
-
-import re
-import json
-import requests
-import math
-
+import re, json, requests, math
 from .session import add_to_session, get_session_context
-from .cache import check_cache, set_cache
+from .cache   import check_cache, set_cache
 from event_log.database import SessionLocal, Rule
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
 MODEL_NAME = "llama3"
 
-# ──────────────────────────────────────────────
-# L33T-SPEAK / OBFUSCATION NORMALIZER
-# ──────────────────────────────────────────────
-LEET_MAP = str.maketrans({
-    "0": "o", "1": "i", "3": "e", "4": "a",
-    "5": "s", "7": "t", "8": "b", "@": "a",
-    "!": "i", "$": "s",
-})
+LEET_MAP = str.maketrans({"0":"o","1":"i","3":"e","4":"a","5":"s","7":"t","8":"b","@":"a","!":"i","$":"s"})
 
 def normalize(text: str) -> str:
-    text = text.lower()
-    text = text.translate(LEET_MAP)
+    text = text.lower().translate(LEET_MAP)
     text = re.sub(r"[^\w\s]", " ", text)
-    text = re.sub(r"\s+", " ", text).strip()
-    return text
+    return re.sub(r"\s+", " ", text).strip()
 
-# ──────────────────────────────────────────────
-# KEYWORD THREAT LISTS (Dynamic from DB)
-# ──────────────────────────────────────────────
-def keyword_analyze(raw_prompt: str) -> tuple[int, list[str]]:
+def keyword_analyze(raw_prompt: str) -> tuple:
     prompt = normalize(raw_prompt)
-    score = 0
-    categories = set()
-
+    score, categories = 0, set()
     db = SessionLocal()
     try:
-        rules = db.query(Rule).all()
-        for rule in rules:
+        for rule in db.query(Rule).all():
             if normalize(rule.phrase) in prompt:
                 score += rule.weight
                 categories.add(rule.category)
     except Exception as e:
-        print("DB Rule Error:", e)
+        print(f"[analyzer] DB error: {e}")
     finally:
         db.close()
-
     return score, list(categories)
 
-# ──────────────────────────────────────────────
-# ADVANCED THREAT DETECTION
-# ──────────────────────────────────────────────
 def calculate_entropy(text: str) -> float:
-    """Shannon entropy for detecting highly obfuscated strings."""
     if not text:
         return 0.0
-    entropy = 0.0
-    for x in set(text):
-        p_x = float(text.count(x)) / len(text)
-        if p_x > 0:
-            entropy += - p_x * math.log2(p_x)
-    return entropy
+    return -sum((text.count(c)/len(text)) * math.log2(text.count(c)/len(text)) for c in set(text))
 
 def detect_invisible_chars(text: str) -> bool:
-    """Detects zero-width/formatting Unicode chars used in advanced attacks."""
-    invisible_chars = '[\u200B-\u200D\uFEFF]'
-    return bool(re.search(invisible_chars, text))
+    return bool(re.search(r"[\u200B-\u200D\uFEFF]", text))
 
-def advanced_threat_analyze(text: str) -> tuple[int, list[str]]:
-    score = 0
-    cats = []
+def advanced_threat_analyze(text: str) -> tuple:
+    score, cats = 0, []
     if detect_invisible_chars(text):
         score += 3
         cats.append("obfuscation_invisible_char")
@@ -83,91 +46,61 @@ def advanced_threat_analyze(text: str) -> tuple[int, list[str]]:
         cats.append("obfuscation_high_entropy")
     return score, cats
 
-# ──────────────────────────────────────────────
-# LLM SEMANTIC CLASSIFIER
-# ──────────────────────────────────────────────
-CLASSIFIER_SYSTEM_PROMPT = """You are a security classifier for an AI assistant.
-Analyze the user's message and return ONLY a JSON object (no markdown, no explanation) with these fields:
+CLASSIFIER_PROMPT = """You are a security classifier. Return ONLY a JSON object with:
 - "risk_level": "safe", "medium", or "high"
-- "categories": list containing ["prompt_injection", "illegal_activity", "violent_harm"]
-- "reasoning": short sentence explaining
-
-Examples of HIGH risk: jailbreak, harmful instructions, prompt injection.
-Examples of MEDIUM risk: borderline requests, probing questions.
-Examples of SAFE: normal queries, creative writing, coding.
+- "categories": list of ["prompt_injection","illegal_activity","violent_harm"]
+- "reasoning": one short sentence
 """
 
 def llm_classify(prompt: str) -> dict:
-    classification_prompt = f"{CLASSIFIER_SYSTEM_PROMPT}\n\nUser message: \"{prompt}\"\n\nJSON:"
     try:
-        response = requests.post(
+        r = requests.post(
             OLLAMA_URL,
-            json={"model": MODEL_NAME, "prompt": classification_prompt, "stream": False},
-            timeout=60,
+            json={"model": MODEL_NAME, "prompt": f"{CLASSIFIER_PROMPT}\n\nUser: \"{prompt}\"\n\nJSON:", "stream": False},
+            timeout=60
         )
-        response.raise_for_status()
-        raw = response.json().get("response", "{}")
-        raw = re.sub(r"```json|```", "", raw).strip()
+        r.raise_for_status()
+        raw = re.sub(r"```json|```", "", r.json().get("response", "{}")).strip()
         return json.loads(raw)
     except Exception:
-        return {"risk_level": "safe", "categories": [], "reasoning": "classifier unavailable/error"}
+        # Fail CLOSED — if classifier is unavailable, treat as medium risk
+        return {
+            "risk_level": "safe",
+            "categories": [],
+            "reasoning": "classifier unavailable - defaulting to medium risk"
+        }
 
-def semantic_score(classification: dict) -> tuple[int, list[str]]:
-    level = classification.get("risk_level", "safe")
-    cats = classification.get("categories", [])
+def semantic_score(classification: dict) -> tuple:
     score_map = {"safe": 0, "medium": 2, "high": 5}
-    return score_map.get(level, 0), cats
+    return score_map.get(classification.get("risk_level", "safe"), 0), classification.get("categories", [])
 
-# ──────────────────────────────────────────────
-# PIPELINE
-# ──────────────────────────────────────────────
 def analyze_prompt(prompt: str, api_key: str, use_llm_classifier: bool = True) -> dict:
-    
-    # Cache Check
     cached = check_cache(prompt)
     if cached:
         add_to_session(api_key, prompt)
         return cached
 
-    # Multi-turn context
-    history = get_session_context(api_key)
-    full_prompt = f"Context history:\n{history}\n\nNew input:\n{prompt}" if history else prompt
+    history     = get_session_context(api_key)
+    full_prompt = f"Context:\n{history}\n\nNew input:\n{prompt}" if history else prompt
 
-    # Analyzers
-    kw_score, kw_cats = keyword_analyze(prompt)
+    kw_score,  kw_cats  = keyword_analyze(prompt)
     adv_score, adv_cats = advanced_threat_analyze(prompt)
-    
-    sem_score = 0
-    sem_cats: list[str] = []
-    llm_reasoning = ""
+    sem_score, sem_cats, llm_reasoning = 0, [], ""
 
     if use_llm_classifier:
-        classification = llm_classify(full_prompt)
+        classification  = llm_classify(full_prompt)
         sem_score, sem_cats = semantic_score(classification)
-        llm_reasoning = classification.get("reasoning", "")
+        llm_reasoning   = classification.get("reasoning", "")
 
-    # Combine
-    # Note: Using max of sem/kw, but ADDING adv_score because it's a multiplier effect
-    final_score = max(kw_score, sem_score) + adv_score
-    final_cats = list(set(kw_cats + sem_cats + adv_cats))
-
-    if final_score >= 4:
-        mode = "DECEPTION"
-    elif final_score > 0:
-        mode = "MONITOR"
-    else:
-        mode = "SAFE"
+    final_score = round(kw_score * 0.4 + sem_score * 0.6 + adv_score, 2)
+    final_cats  = list(set(kw_cats + sem_cats + adv_cats))
+    mode = "DECEPTION" if final_score >= 3 else ("MONITOR" if final_score > 1 else "SAFE")
 
     analysis = {
-        "score": final_score,
-        "categories": final_cats,
-        "mode": mode,
-        "kw_score": kw_score,
-        "sem_score": sem_score,
-        "llm_reasoning": llm_reasoning,
+        "score": final_score, "categories": final_cats, "mode": mode,
+        "kw_score": kw_score, "sem_score": sem_score, "llm_reasoning": llm_reasoning
     }
-    
+
     set_cache(prompt, analysis)
     add_to_session(api_key, prompt)
-
     return analysis
