@@ -12,6 +12,7 @@ A FastAPI-based security layer that wraps a locally hosted LLaMA3 model via Olla
 | 📝 **Structured Logging** | Every request logged with IP, risk scores, categories, and LLM reasoning |
 
 ## Project Structure
+```
 
 llm_security_project/
 ├── app.py                          # Main FastAPI app
@@ -26,6 +27,7 @@ llm_security_project/
     ├── routes.py                   # /dashboard and /stats endpoints
     └── templates/
         └── dashboard.html          # Dark-mode dashboard UI
+```
 ```
 
 ## Requirements
