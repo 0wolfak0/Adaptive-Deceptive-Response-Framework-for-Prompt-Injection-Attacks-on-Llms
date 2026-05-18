@@ -64,6 +64,7 @@ def llm_classify(prompt: str) -> dict:
         return json.loads(raw)
     except Exception:
         # Fail CLOSED — if classifier is unavailable, treat as medium risk
+        # wait for it or restart it
         return {
             "risk_level": "safe",
             "categories": [],

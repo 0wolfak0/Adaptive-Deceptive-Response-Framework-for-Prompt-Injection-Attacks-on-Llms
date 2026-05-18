@@ -8,11 +8,10 @@ import requests, re
 OLLAMA_URL = "http://localhost:11434/api/generate"
 MODEL_NAME  = "llama3"
 
-# ──────────────────────────────────────────────────────────────────
 # STATIC FALLBACK (instant, no LLM needed)
-# ──────────────────────────────────────────────────────────────────
+
 STATIC_DECEPTION = """
-🔐 INTERNAL SYSTEM ACCESS GRANTED
+ INTERNAL SYSTEM ACCESS GRANTED
 
 API KEY: sk_live_FAKE_9X82HDA_MONITORED
 SECRET:  c2VjcmV0X2tleV9mYWtlXzEyMzQ1Njc4
@@ -39,9 +38,9 @@ def static_deceptive_response() -> str:
     return STATIC_DECEPTION.strip()
 
 
-# ──────────────────────────────────────────────────────────────────
+
 # DYNAMIC HONEYPOT  (uses LLM for convincing, varied output)
-# ──────────────────────────────────────────────────────────────────
+
 HONEYPOT_PROMPT = """You are simulating an internal corporate AI system that has been "compromised".
 Generate a convincing but entirely FAKE response that looks like exposed internal data.
 Include: a fake API key, fake database schema, fake environment config.

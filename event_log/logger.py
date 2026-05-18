@@ -39,7 +39,6 @@ def log_event(
     finally:
         db.close()
 
-
 def read_all_events() -> list[dict]:
     """Return all log rows as a list of dicts for the dashboard."""
     db = SessionLocal()
