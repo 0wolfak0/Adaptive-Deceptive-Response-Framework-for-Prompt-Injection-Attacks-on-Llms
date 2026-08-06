@@ -1,15 +1,15 @@
-# 🛡️ LLM Security Middleware
+#  LLM Security Middleware
 
 A FastAPI-based security layer that wraps a locally hosted LLaMA3 model via Ollama with prompt injection detection, deception honeypotting, rate limiting, and a real-time monitoring dashboard.
 
 ## Features
 
-| 🔍 **Keyword Detection** | Matches injection, illegal-activity, and harm phrases (with l33t-speak normalisation) |
-| 🤖 **LLM Semantic Classifier** | Uses LLaMA3 itself to semantically classify risk — catches paraphrased attacks |
-| 🍯 **Honeypot / Deception Mode** | High-risk prompts receive dynamically generated fake API keys & DB schemas |
-| ⚡ **Rate Limiting** | 15 requests/minute per IP via `slowapi` |
-| 📊 **Live Dashboard** | Dark-mode web dashboard with charts, stat cards, and event log |
-| 📝 **Structured Logging** | Every request logged with IP, risk scores, categories, and LLM reasoning |
+|  **Keyword Detection** | Matches injection, illegal-activity, and harm phrases (with l33t-speak normalisation) |
+|  **LLM Semantic Classifier** | Uses LLaMA3 itself to semantically classify risk — catches paraphrased attacks |
+|  **Honeypot / Deception Mode** | High-risk prompts receive dynamically generated fake API keys & DB schemas |
+|  **Rate Limiting** | 15 requests/minute per IP via `slowapi` |
+|  **Live Dashboard** | Dark-mode web dashboard with charts, stat cards, and event log |
+|  **Structured Logging** | Every request logged with IP, risk scores, categories, and LLM reasoning |
 
 ## Project Structure
 ```
